@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package permission;
+
+// Service for handling admin (internal) projectmgt action
+service PermissionSrv {
+	rpc AddPermission(Input) returns(Response) {}
+	rpc RemovePermission(Input) returns(Response){}
+	rpc ReplacePermission(Input) returns(Response){}
+}
+
+message Input {
+	string id			= 1;
+	string perm_type	= 2;
+	string resource		= 3;
+	string role			= 4;
+}
+
+message Response {
+}

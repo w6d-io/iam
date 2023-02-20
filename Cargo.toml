@@ -1,0 +1,35 @@
+[package]
+name = "permission_manager"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+axum = "0.6.4"
+tower = "0.4.13"
+tower-http = { version = "0.3.5", features = ["request-id"] }
+tokio = { version = "1.24.*", features = ["rt-multi-thread", "macros", "sync"]}
+serde = "1.0.*"
+serde_json = "1.0.*"
+rs-utils = {git = "https://github.com/w6d-io/rs-utils",features = ["kratos", "anyhow-rocket"]}
+figment = "0.10.*"
+tracing = { version = "0.1.37", features = ["log"] }
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+hyper = "0.14.23"
+ory-kratos-client = "0.11.1"
+tonic = "0.8.3"
+prost = "0.11.6"
+futures = "0.3.26"
+thiserror = "1.0.38"
+axum-server = { version = "0.4.4", features = ["tls-rustls"] }
+rustls-pemfile = "1.0.2"
+tokio-rustls = "0.23.4"
+
+[dev-dependencies]
+mime = "0.3"
+
+[build-dependencies]
+tonic-build = "0.8.4"

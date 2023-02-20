@@ -1,0 +1,14 @@
+[kratos]
+addr = "http://localhost:8080"
+
+[service]
+addr = "0.0.0.0"
+ports.http = "8080"
+ports.http_health = "1040"
+ports.grpc = "5050"
+ports.grpc_health="1030"
+
+[tls]
+certificate = "certificate/X509Certificate.crt"
+key = "certificate/MyPrivate.key"
+cert_autority = "certificate/CAPrivate.pem"
