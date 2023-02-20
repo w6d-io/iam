@@ -33,6 +33,7 @@ use config::{PermissionsConfig, Service, CONFIG_FALLBACK};
 
 type ConfigState = Arc<RwLock<PermissionsConfig>>;
 
+///lauch the grpc router
 async fn make_grpc(
     shared_state: ConfigState,
     config: Service,
@@ -50,6 +51,7 @@ async fn make_grpc(
     Ok(handle)
 }
 
+///main router config
 pub fn app(shared_state: ConfigState) -> Router {
     Router::new()
         .route("/api/permissions", post(add).delete(remove).put(replace))
@@ -57,6 +59,7 @@ pub fn app(shared_state: ConfigState) -> Router {
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
 }
 
+///heatlh router config
 pub fn health(shared_state: ConfigState) -> Router {
     Router::new()
         .route("/api/permissions/alive", get(alive))
@@ -64,11 +67,13 @@ pub fn health(shared_state: ConfigState) -> Router {
         .with_state(shared_state)
 }
 
+///this function send the shutdown signal to the router 
 async fn shutdown(handle: axum_server::Handle) {
     shutdown_signal().await;
     handle.graceful_shutdown(Some(Duration::from_secs(30)))
 }
 
+///launch http router
 async fn make_http(
     shared_state: ConfigState,
     f: fn(ConfigState) -> Router,
@@ -115,7 +120,7 @@ async fn main() -> Result<()> {
     let health = make_http(shared_state.clone(), health, health_addr, handle, &tls).await?;
 
     let grpc = make_grpc(shared_state, service).await?;
-    let (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
+    leCAt (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
     grpc_critical?;
     http_critical?;
     health_critical?;

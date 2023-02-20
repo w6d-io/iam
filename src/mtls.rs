@@ -4,6 +4,8 @@ use anyhow::Result;
 use rustls_pemfile::Item;
 use tokio_rustls::rustls::{self, server, RootCertStore, ServerConfig};
 
+
+///build a mtls server config
 pub async fn build_rustls_server_config(
     cert: &str,
     key: &str,
