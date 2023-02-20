@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
     let health = make_http(shared_state.clone(), health, health_addr, handle, &tls).await?;
 
     let grpc = make_grpc(shared_state, service).await?;
-    leCAt (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
+    let (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
     grpc_critical?;
     http_critical?;
     health_critical?;
