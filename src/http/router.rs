@@ -6,6 +6,7 @@ use axum::{
     response::Result,
     Extension,
 };
+use tracing::info;
 use ory_kratos_client::apis::metadata_api::is_ready;
 use tokio::sync::RwLock;
 use tower_http::request_id::RequestId;
@@ -24,12 +25,14 @@ pub async fn add(
 ) -> Result<(), RouterError> {
     let uuid = request_id.header_value().to_str()?;
 
+    info!("{uuid}: adding data to identity");
     let config = config.read().await;
     let client = match &config.kratos.client {
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
     kratos_controler(client, uuid, payload, "add").await?;
+    info!("{uuid}: done");
     Ok(())
 }
 
@@ -40,12 +43,14 @@ pub async fn remove(
     Json(payload): Json<Input>,
 ) -> Result<(), RouterError> {
     let uuid = request_id.header_value().to_str()?;
+    info!("{uuid}: removing data to identity");
     let config = config.read().await;
     let client = match &config.kratos.client {
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
     kratos_controler(client, uuid, payload, "remove").await?;
+    info!("{uuid}: done");
     Ok(())
 }
 
@@ -56,12 +61,15 @@ pub async fn replace(
     Json(payload): Json<Input>,
 ) -> Result<(), RouterError> {
     let uuid = request_id.header_value().to_str()?;
+    info!("{uuid}: replacing data in identity");
     let config = config.read().await;
     let client = match &config.kratos.client {
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
     kratos_controler(client, uuid, payload, "replace").await?;
+
+    info!("{uuid}: done");
     Ok(())
 }
 

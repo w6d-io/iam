@@ -26,7 +26,7 @@ pub async fn build_rustls_server_config(
 
     let config_builder = ServerConfig::builder().with_safe_defaults();
 
-    tracing::info!("mTLS enabled, ca cert path={}", ca);
+    tracing::info!("mTLS ca cert path={}", ca);
     let ca = tokio::fs::read(ca).await.unwrap();
     let mut server_config = if let Some(Item::X509Certificate(ca)) =
         rustls_pemfile::read_one(&mut ca.as_ref())?

@@ -10,7 +10,7 @@ use axum_server::{bind_rustls, tls_rustls::RustlsConfig, Handle};
 use tokio::{sync::RwLock, task::JoinHandle};
 use tonic::transport::Server as GrpcServer;
 use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
-use tracing::warn;
+use tracing::{warn,info};
 use tracing_subscriber::{fmt, EnvFilter};
 
 pub mod permission {
@@ -53,6 +53,7 @@ async fn make_grpc(
 
 ///main router config
 pub fn app(shared_state: ConfigState) -> Router {
+    info!("configuring main router");
     Router::new()
         .route("/api/permissions", post(add).delete(remove).put(replace))
         .with_state(shared_state)
@@ -61,6 +62,7 @@ pub fn app(shared_state: ConfigState) -> Router {
 
 ///heatlh router config
 pub fn health(shared_state: ConfigState) -> Router {
+    info!("configuring health router");
     Router::new()
         .route("/api/permissions/alive", get(alive))
         .route("/api/permissions/ready", get(ready))
@@ -113,12 +115,14 @@ async fn main() -> Result<()> {
     let handle = Handle::new();
     tokio::spawn(shutdown(handle.clone()));
 
+    info!("statrting http router");
     let http_addr = service.addr.clone() + ":" + &service.ports.http as &str;
     let http = make_http(shared_state.clone(), app, http_addr, handle.clone(), &tls).await?;
 
     let health_addr = service.addr.clone() + ":" + &service.ports.http_health as &str;
     let health = make_http(shared_state.clone(), health, health_addr, handle, &tls).await?;
 
+    info!("statrting grpc router");
     let grpc = make_grpc(shared_state, service).await?;
     let (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
     grpc_critical?;
