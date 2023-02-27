@@ -10,7 +10,7 @@ use axum_server::{bind_rustls, tls_rustls::RustlsConfig, Handle};
 use tokio::{sync::RwLock, task::JoinHandle};
 use tonic::transport::Server as GrpcServer;
 use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
-use tracing::{warn,info};
+use tracing::{info, warn};
 use tracing_subscriber::{fmt, EnvFilter};
 
 pub mod permission {
@@ -29,19 +29,20 @@ use grpc::router::MyPermissionSrv;
 mod http;
 use http::router::{add, alive, ready, remove, replace};
 mod config;
-use config::{PermissionsConfig, Service, CONFIG_FALLBACK};
+use config::{PermissionsConfig, Tls, CONFIG_FALLBACK};
 
 type ConfigState = Arc<RwLock<PermissionsConfig>>;
 
 ///lauch the grpc router
 async fn make_grpc(
     shared_state: ConfigState,
-    config: Service,
+    addr: String,
 ) -> Result<JoinHandle<Result<(), tonic::transport::Error>>> {
     let service = PermissionSrvServer::new(MyPermissionSrv {
         config: shared_state,
     });
-    let socket = (config.addr.clone() + ":" + &config.ports.grpc as &str).parse()?;
+    info!("lauching grpc server on: {addr}");
+    let socket = addr.parse()?;
     let handle = tokio::spawn(
         GrpcServer::builder()
             .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
@@ -69,7 +70,7 @@ pub fn health(shared_state: ConfigState) -> Router {
         .with_state(shared_state)
 }
 
-///this function send the shutdown signal to the router 
+///this function send the shutdown signal to the router
 async fn shutdown(handle: axum_server::Handle) {
     shutdown_signal().await;
     handle.graceful_shutdown(Some(Duration::from_secs(30)))
@@ -80,23 +81,25 @@ async fn make_http(
     shared_state: ConfigState,
     f: fn(ConfigState) -> Router,
     addr: String,
-    handle: Handle,
-    tls: &config::Tls
+    handle: &Handle,
+    tls: &Tls,
 ) -> Result<JoinHandle<Result<(), std::io::Error>>> {
     //todo: add path for tlscertificate
-    let tls_config = build_rustls_server_config(&tls.certificate, &tls.key, &tls.cert_autority).await?;
+    let tls_config =
+        build_rustls_server_config(&tls.certificate, &tls.key, &tls.cert_autority).await?;
     let rustls_config = RustlsConfig::from_config(tls_config);
     let handle = tokio::spawn(
         bind_rustls(addr.parse().unwrap(), rustls_config)
-            .handle(handle)
-            .serve(f(shared_state).into_make_service()), // .with_graceful_shutdown(shutdown_signal())
+            .handle(handle.to_owned())
+            .serve(f(shared_state).into_make_service()),
     );
+    info!("lauching http server on: {addr}");
     Ok(handle)
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    std::env::set_var("RUST_LOG", "INFO");
+    std::env::set_var("RUST_LOG", "DEBUG");
     fmt()
         .with_target(false)
         .with_level(true)
@@ -117,13 +120,14 @@ async fn main() -> Result<()> {
 
     info!("statrting http router");
     let http_addr = service.addr.clone() + ":" + &service.ports.http as &str;
-    let http = make_http(shared_state.clone(), app, http_addr, handle.clone(), &tls).await?;
+    let http = make_http(shared_state.clone(), app, http_addr, &handle, &tls).await?;
 
     let health_addr = service.addr.clone() + ":" + &service.ports.http_health as &str;
-    let health = make_http(shared_state.clone(), health, health_addr, handle, &tls).await?;
+    let health = make_http(shared_state.clone(), health, health_addr, &handle, &tls).await?;
 
     info!("statrting grpc router");
-    let grpc = make_grpc(shared_state, service).await?;
+    let grpc_addr = service.addr.clone() + ":" + &service.ports.grpc as &str;
+    let grpc = make_grpc(shared_state, grpc_addr).await?;
     let (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
     grpc_critical?;
     http_critical?;

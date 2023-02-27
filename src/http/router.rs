@@ -6,10 +6,10 @@ use axum::{
     response::Result,
     Extension,
 };
-use tracing::info;
 use ory_kratos_client::apis::metadata_api::is_ready;
 use tokio::sync::RwLock;
 use tower_http::request_id::RequestId;
+use tracing::info;
 
 use crate::{
     config::PermissionsConfig,
@@ -22,7 +22,7 @@ pub async fn add(
     State(config): State<Arc<RwLock<PermissionsConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
-) -> Result<(), RouterError> {
+) -> Result<&'static str, RouterError> {
     let uuid = request_id.header_value().to_str()?;
 
     info!("{uuid}: adding data to identity");
@@ -33,7 +33,7 @@ pub async fn add(
     };
     kratos_controler(client, uuid, payload, "add").await?;
     info!("{uuid}: done");
-    Ok(())
+    Ok("200")
 }
 
 ///http route to remove an identity field
@@ -41,7 +41,7 @@ pub async fn remove(
     State(config): State<Arc<RwLock<PermissionsConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
-) -> Result<(), RouterError> {
+) -> Result<&'static str, RouterError> {
     let uuid = request_id.header_value().to_str()?;
     info!("{uuid}: removing data to identity");
     let config = config.read().await;
@@ -51,7 +51,7 @@ pub async fn remove(
     };
     kratos_controler(client, uuid, payload, "remove").await?;
     info!("{uuid}: done");
-    Ok(())
+    Ok("200")
 }
 
 ///http route to replace an identity field
@@ -59,7 +59,7 @@ pub async fn replace(
     State(config): State<Arc<RwLock<PermissionsConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
-) -> Result<(), RouterError> {
+) -> Result<&'static str, RouterError> {
     let uuid = request_id.header_value().to_str()?;
     info!("{uuid}: replacing data in identity");
     let config = config.read().await;
@@ -70,23 +70,23 @@ pub async fn replace(
     kratos_controler(client, uuid, payload, "replace").await?;
 
     info!("{uuid}: done");
-    Ok(())
+    Ok("200")
 }
 
-pub async fn alive() -> Result<(), RouterError> {
-    Ok(())
+pub async fn alive() -> Result<&'static str, RouterError> {
+    Ok("200")
 }
 
 pub async fn ready(
     State(config): State<Arc<RwLock<PermissionsConfig>>>,
-) -> Result<(), RouterError> {
+) -> Result<&'static str, RouterError> {
     let config = config.read().await;
     let client = match &config.kratos.client {
         Some(client) => client,
         None => Err(anyhow!("Kratos client not initialized"))?,
     };
     is_ready(client).await?;
-    Ok(())
+    Ok("200")
 }
 
 #[cfg(test)]

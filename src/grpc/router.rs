@@ -3,6 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response as TonicResponse, Status};
 use tower_http::request_id::RequestId;
+use tracing::info;
 
 use crate::{
     config::PermissionsConfig,
@@ -28,6 +29,7 @@ impl PermissionSrv for MyPermissionSrv {
                 .expect("the uuid should be a valide string"),
             None => return Err(Status::internal("No uuid is assigned to this request!")),
         };
+        info!("{uuid}: adding data to identity");
         let config = self.config.read().await;
         let client = match &config.kratos.client {
             Some(client) => client,
@@ -57,6 +59,7 @@ impl PermissionSrv for MyPermissionSrv {
                 .expect("the uuid should be a valide string"),
             None => return Err(Status::internal("No uuid is assigned to this request!")),
         };
+        info!("{uuid}: removing data to identity");
         let config = self.config.read().await;
         let client = match &config.kratos.client {
             Some(client) => client,
@@ -86,6 +89,7 @@ impl PermissionSrv for MyPermissionSrv {
                 .expect("the uuid should be a valide string"),
             None => return Err(Status::internal("No uuid is assigned to this request!")),
         };
+        info!("{uuid}: replacing data in identity");
         let config = self.config.read().await;
         let client = match &config.kratos.client {
             Some(client) => client,

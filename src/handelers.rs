@@ -27,4 +27,3 @@ pub async fn shutdown_signal() {
 
     info!("signal received, starting graceful shutdown");
 }
-

@@ -1,5 +1,5 @@
 [kratos]
-addr = "http://localhost:8080"
+addr = "http://localhost:4434"
 
 [service]
 addr = "0.0.0.0"
@@ -9,6 +9,6 @@ ports.grpc = "5050"
 ports.grpc_health="1030"
 
 [tls]
-certificate = "certificate/X509Certificate.crt"
-key = "certificate/MyPrivate.key"
-cert_autority = "certificate/CAPrivate.pem"
+certificate = "certificate/server_certs/server.cert.pem"
+key = "certificate/server_certs/server.key.pem"
+cert_autority = "certificate/certs/cacert.pem"

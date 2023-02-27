@@ -26,9 +26,8 @@ pub struct Service {
     pub ports: Ports,
 }
 
-
 #[derive(Deserialize, Clone, Default, Debug)]
-pub struct Tls{
+pub struct Tls {
     pub certificate: String,
     pub key: String,
     pub cert_autority: String,
