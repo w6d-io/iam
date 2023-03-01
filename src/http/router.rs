@@ -126,7 +126,7 @@ mod http_router_test {
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "contributor"
+                          "role": "\"contributor\""
                         }))
                         .unwrap(),
                     ))
@@ -154,7 +154,7 @@ mod http_router_test {
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "contributor"
+                          "role": "\"contributor\""
                         }))
                         .unwrap(),
                     ))
@@ -182,7 +182,7 @@ mod http_router_test {
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "contributor"
+                          "role": "\"contributor\""
                         }))
                         .unwrap(),
                     ))

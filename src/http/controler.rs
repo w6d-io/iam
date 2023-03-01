@@ -9,7 +9,7 @@ use ory_kratos_client::{
 
 use crate::permission::Input;
 
-async fn verify_type_path(_client: &Configuration, uuid: &str, payload: &Input) -> Result<()> {
+async fn verify_type_path(_client: &Configuration, uuid: &str, payload: &Input) -> Result<Option<JsonPatch>> {
     #[cfg(not(test))]
     let identity =
         ory_kratos_client::apis::identity_api::get_identity(_client, &payload.id, None).await?;
@@ -38,14 +38,11 @@ async fn verify_type_path(_client: &Configuration, uuid: &str, payload: &Input) 
             payload.perm_type
         );
         let path = "/metadata_admin".to_owned() + "/" + &payload.perm_type as &str;
-        let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}",);
-        let _patch = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
-        #[cfg(not(test))]
-        patch_identity(_client, &payload.id, Some(vec![_patch]))
-            .await
-            .context(format!("{uuid}:"))?;
+        let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
+        let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:")).context(format!("{uuid}:"))?;
+        return Ok(Some(json));
     }
-    Ok(())
+    Ok(None)
 }
 
 ///make re request to change the identity coresponding to the user id
@@ -56,23 +53,27 @@ pub async fn kratos_controler(
     payload: Input,
     op: &str,
 ) -> Result<()> {
+    let mut patch_vec = Vec::new();
     if op != "remove" {
-        verify_type_path(_client, uuid, &payload).await?;
+        if let Some(json_patch) = verify_type_path(_client, uuid, &payload).await?{
+            patch_vec.push(json_patch);
+        }; 
     }
     info!("{uuid}: Patching identity");
     let path = "/metadata_admin/".to_owned()
         + &payload.perm_type as &str
         + "/"
         + &payload.resource as &str;
-    let patch = format!(
+    let raw_patch = format!(
         "{{\"op\" : \"{op}\", \"path\" : \"{path}\", \"value\" : {}}}",
         payload.role
     );
 
-    debug!("patch: {patch}");
-    let _patch = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
+    debug!("patch: {raw_patch}");
+    let patch = serde_json::from_str::<JsonPatch>(&raw_patch).context(format!("{uuid}:"))?;
+    patch_vec.push(patch);
     #[cfg(not(test))]
-    patch_identity(_client, &payload.id, Some(vec![_patch]))
+    patch_identity(_client, &payload.id, Some(patch_vec))
         .await
         .context(format!("{uuid}:"))?;
     info!("{uuid}: Identity patching sucessfull");
@@ -91,7 +92,7 @@ mod test_controler {
             id: "1".to_owned(),
             perm_type: "test".to_owned(),
             resource: "resource".to_owned(),
-            role: "testting".to_owned(),
+            role: "\"testting\"".to_owned(),
         };
         kratos_controler(&client, uuid, payload, "add")
             .await
