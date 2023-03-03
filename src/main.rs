@@ -56,7 +56,7 @@ async fn make_grpc(
 pub fn app(shared_state: ConfigState) -> Router {
     info!("configuring main router");
     Router::new()
-        .route("/api/permissions", post(add).delete(remove).put(replace))
+        .route("/api/iam/policy", post(add).delete(remove).put(replace))
         .with_state(shared_state)
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
 }
@@ -65,8 +65,8 @@ pub fn app(shared_state: ConfigState) -> Router {
 pub fn health(shared_state: ConfigState) -> Router {
     info!("configuring health router");
     Router::new()
-        .route("/api/permissions/alive", get(alive))
-        .route("/api/permissions/ready", get(ready))
+        .route("/api/iam/alive", get(alive))
+        .route("/api/iam/ready", get(ready))
         .with_state(shared_state)
 }
 
