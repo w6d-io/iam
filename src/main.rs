@@ -3,9 +3,8 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use axum::{
     routing::{get, post},
-    Router,
+    Router, Server,
 };
-
 use axum_server::{bind_rustls, tls_rustls::RustlsConfig, Handle};
 use tokio::{sync::RwLock, task::JoinHandle};
 use tonic::transport::Server as GrpcServer;
@@ -13,13 +12,12 @@ use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
 use tracing::{info, warn};
 use tracing_subscriber::{fmt, EnvFilter};
 
+use rs_utils::config::{init_watcher, Config};
+
 pub mod permission {
     tonic::include_proto!("permission");
 }
 use permission::permission_srv_server::PermissionSrvServer;
-
-use rs_utils::config::{init_watcher, Config};
-
 mod mtls;
 use mtls::build_rustls_server_config;
 mod handelers;
@@ -76,8 +74,8 @@ async fn shutdown(handle: axum_server::Handle) {
     handle.graceful_shutdown(Some(Duration::from_secs(30)))
 }
 
-///launch http router
-async fn make_http(
+///launch http router with mtls
+async fn make_http_mtls(
     shared_state: ConfigState,
     f: fn(ConfigState) -> Router,
     addr: String,
@@ -92,6 +90,22 @@ async fn make_http(
         bind_rustls(addr.parse().unwrap(), rustls_config)
             .handle(handle.to_owned())
             .serve(f(shared_state).into_make_service()),
+    );
+    info!("lauching http server on: {addr}");
+    Ok(handle)
+}
+
+///launch simple http router
+async fn make_http(
+    shared_state: ConfigState,
+    f: fn(ConfigState) -> Router,
+    addr: String,
+) -> Result<JoinHandle<Result<(), hyper::Error>>> {
+    //todo: add path for tlscertificate
+    let handle = tokio::spawn(
+        Server::bind(&addr.parse().unwrap())
+            .serve(f(shared_state).into_make_service())
+            .with_graceful_shutdown(shutdown_signal()),
     );
     info!("lauching http server on: {addr}");
     Ok(handle)
@@ -120,10 +134,10 @@ async fn main() -> Result<()> {
 
     info!("statrting http router");
     let http_addr = service.addr.clone() + ":" + &service.ports.http as &str;
-    let http = make_http(shared_state.clone(), app, http_addr, &handle, &tls).await?;
+    let http = make_http_mtls(shared_state.clone(), app, http_addr, &handle, &tls).await?;
 
     let health_addr = service.addr.clone() + ":" + &service.ports.http_health as &str;
-    let health = make_http(shared_state.clone(), health, health_addr, &handle, &tls).await?;
+    let health = make_http(shared_state.clone(), health, health_addr).await?;
 
     info!("statrting grpc router");
     let grpc_addr = service.addr.clone() + ":" + &service.ports.grpc as &str;

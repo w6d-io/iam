@@ -9,7 +9,11 @@ use ory_kratos_client::{
 
 use crate::permission::Input;
 
-async fn verify_type_path(_client: &Configuration, uuid: &str, payload: &Input) -> Result<Option<JsonPatch>> {
+async fn verify_type_path(
+    _client: &Configuration,
+    uuid: &str,
+    payload: &Input,
+) -> Result<Option<JsonPatch>> {
     #[cfg(not(test))]
     let identity =
         ory_kratos_client::apis::identity_api::get_identity(_client, &payload.id, None).await?;
@@ -39,7 +43,9 @@ async fn verify_type_path(_client: &Configuration, uuid: &str, payload: &Input) 
         );
         let path = "/metadata_admin".to_owned() + "/" + &payload.perm_type as &str;
         let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
-        let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:")).context(format!("{uuid}:"))?;
+        let json = serde_json::from_str::<JsonPatch>(&patch)
+            .context(format!("{uuid}:"))
+            .context(format!("{uuid}:"))?;
         return Ok(Some(json));
     }
     Ok(None)
@@ -55,9 +61,9 @@ pub async fn kratos_controler(
 ) -> Result<()> {
     let mut patch_vec = Vec::new();
     if op != "remove" {
-        if let Some(json_patch) = verify_type_path(_client, uuid, &payload).await?{
+        if let Some(json_patch) = verify_type_path(_client, uuid, &payload).await? {
             patch_vec.push(json_patch);
-        }; 
+        };
     }
     info!("{uuid}: Patching identity");
     let path = "/metadata_admin/".to_owned()
