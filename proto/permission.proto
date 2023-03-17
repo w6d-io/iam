@@ -3,7 +3,7 @@ syntax = "proto3";
 package permission;
 
 // Service for handling admin (internal) projectmgt action
-service PermissionSrv {
+service Iam {
 	rpc AddPermission(Input) returns(Response) {}
 	rpc RemovePermission(Input) returns(Response){}
 	rpc ReplacePermission(Input) returns(Response){}

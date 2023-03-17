@@ -17,13 +17,13 @@ use rs_utils::config::{init_watcher, Config};
 pub mod permission {
     tonic::include_proto!("permission");
 }
-use permission::permission_srv_server::PermissionSrvServer;
+use permission::iam_server::IamServer;
 mod mtls;
 use mtls::build_rustls_server_config;
 mod handelers;
 use handelers::shutdown_signal;
 mod grpc;
-use grpc::router::MyPermissionSrv;
+use grpc::router::MyIam;
 mod http;
 use http::router::{add, alive, ready, remove, replace};
 mod config;
@@ -36,7 +36,7 @@ async fn make_grpc(
     shared_state: ConfigState,
     addr: String,
 ) -> Result<JoinHandle<Result<(), tonic::transport::Error>>> {
-    let service = PermissionSrvServer::new(MyPermissionSrv {
+    let service = IamServer::new(MyIam {
         config: shared_state,
     });
     info!("lauching grpc server on: {addr}");
