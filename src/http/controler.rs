@@ -43,9 +43,7 @@ async fn verify_type_path(
         );
         let path = "/metadata_admin".to_owned() + "/" + &payload.perm_type as &str;
         let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
-        let json = serde_json::from_str::<JsonPatch>(&patch)
-            .context(format!("{uuid}:"))
-            .context(format!("{uuid}:"))?;
+        let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
         return Ok(Some(json));
     }
     Ok(None)
@@ -75,9 +73,10 @@ pub async fn kratos_controler(
         payload.role
     );
 
-    debug!("patch: {raw_patch}");
+    debug!("patch: {}", raw_patch);
     let patch = serde_json::from_str::<JsonPatch>(&raw_patch).context(format!("{uuid}:"))?;
     patch_vec.push(patch);
+    debug!("vec patch: {:?}", patch_vec);
     #[cfg(not(test))]
     patch_identity(_client, &payload.id, Some(patch_vec))
         .await

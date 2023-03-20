@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response as TonicResponse, Status};
 use tower_http::request_id::RequestId;
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{
     config::PermissionsConfig,
@@ -41,6 +41,7 @@ impl Iam for MyIam {
         };
         let resp = kratos_controler(client, uuid, payload, "add").await;
         if let Err(e) = resp {
+            error!("failed to apply patch: {e}");
             return Err(Status::internal(e.to_string()));
         }
         Ok(TonicResponse::new(Response {}))
