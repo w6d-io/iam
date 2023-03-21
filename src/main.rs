@@ -113,7 +113,6 @@ async fn make_http(
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    std::env::set_var("RUST_LOG", "DEBUG");
     fmt()
         .with_target(false)
         .with_level(true)
