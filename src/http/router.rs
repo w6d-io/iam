@@ -119,7 +119,7 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
@@ -147,7 +147,7 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
@@ -175,7 +175,7 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
