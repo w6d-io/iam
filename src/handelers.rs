@@ -1,5 +1,6 @@
 use tokio::signal;
-use tracing::info;
+use axum::http::{StatusCode, Uri};
+use tracing::{error, info};
 
 ///handle the shutdown signal
 pub async fn shutdown_signal() {
@@ -26,4 +27,10 @@ pub async fn shutdown_signal() {
     }
 
     info!("signal received, starting graceful shutdown");
+}
+
+///handle fallback
+pub async fn fallback(uri: Uri) -> (StatusCode, String) {
+    error!("route not found: {uri}");
+    (StatusCode::NOT_FOUND, format!("No route for {uri}"))
 }

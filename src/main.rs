@@ -21,7 +21,7 @@ use permission::iam_server::IamServer;
 mod mtls;
 use mtls::build_rustls_server_config;
 mod handelers;
-use handelers::shutdown_signal;
+use handelers::{shutdown_signal, fallback};
 mod grpc;
 use grpc::router::MyIam;
 mod http;
@@ -56,6 +56,7 @@ pub fn app(shared_state: ConfigState) -> Router {
     Router::new()
         .route("/api/iam/policy", post(add).delete(remove).put(replace))
         .with_state(shared_state)
+        .fallback(fallback)
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
 }
 
@@ -65,6 +66,7 @@ pub fn health(shared_state: ConfigState) -> Router {
     Router::new()
         .route("/api/iam/alive", get(alive))
         .route("/api/iam/ready", get(ready))
+        .fallback(fallback)
         .with_state(shared_state)
 }
 
