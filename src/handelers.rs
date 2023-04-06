@@ -1,5 +1,5 @@
-use tokio::signal;
 use axum::http::{StatusCode, Uri};
+use tokio::signal;
 use tracing::{error, info};
 
 ///handle the shutdown signal

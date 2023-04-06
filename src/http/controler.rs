@@ -7,7 +7,7 @@ use ory_kratos_client::{
     models::{Identity, JsonPatch},
 };
 
-use crate::permission::Input;
+use crate::permission::{Input, Mode};
 
 async fn verify_type_path(
     _client: &Configuration,
@@ -64,10 +64,13 @@ pub async fn kratos_controler(
         };
     }
     info!("{uuid}: Patching identity");
-    let path = "/metadata_admin/".to_owned()
-        + &payload.perm_type as &str
-        + "/"
-        + &payload.resource as &str;
+    let root = match payload.mode() {
+        Mode::Meta => "metadata_admin",
+        Mode::Trait => "trait",
+    };
+
+    let path =
+        "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str;
     let raw_patch = format!(
         "{{\"op\" : \"{op}\", \"path\" : \"{path}\", \"value\" : {}}}",
         payload.role
@@ -98,6 +101,7 @@ mod test_controler {
             perm_type: "test".to_owned(),
             resource: "resource".to_owned(),
             role: "\"testting\"".to_owned(),
+            mode: 0,
         };
         kratos_controler(&client, uuid, payload, "add")
             .await

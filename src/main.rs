@@ -21,7 +21,7 @@ use permission::iam_server::IamServer;
 mod mtls;
 use mtls::build_rustls_server_config;
 mod handelers;
-use handelers::{shutdown_signal, fallback};
+use handelers::{fallback, shutdown_signal};
 mod grpc;
 use grpc::router::MyIam;
 mod http;
