@@ -65,7 +65,8 @@ pub async fn kratos_controler(
     }
     info!("{uuid}: Patching identity");
     let root = match payload.mode() {
-        Mode::Meta => "metadata_admin",
+        Mode::Admin => "metadata_admin",
+        Mode::Public => "metadata_public",
         Mode::Trait => "trait",
     };
 
