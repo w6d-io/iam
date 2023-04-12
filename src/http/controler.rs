@@ -74,7 +74,7 @@ pub async fn kratos_controler(
         "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str;
     let raw_patch = format!(
         "{{\"op\" : \"{op}\", \"path\" : \"{path}\", \"value\" : {}}}",
-        payload.role
+        payload.value
     );
 
     debug!("patch: {}", raw_patch);
@@ -101,7 +101,7 @@ mod test_controler {
             id: "1".to_owned(),
             perm_type: "test".to_owned(),
             resource: "resource".to_owned(),
-            role: "\"testting\"".to_owned(),
+            value: "\"testting\"".to_owned(),
             mode: 0,
         };
         kratos_controler(&client, uuid, payload, "add")
