@@ -9,11 +9,18 @@ service Iam {
 	rpc ReplacePermission(Input) returns(Response){}
 }
 
+enum Mode {
+	Admin	= 0;
+	Public  = 1;
+	Trait	= 2;
+}
+
 message Input {
 	string id			= 1;
 	string perm_type	= 2;
 	string resource		= 3;
-	string role			= 4;
+	string value		= 4;
+	Mode mode			= 5;
 }
 
 message Response {

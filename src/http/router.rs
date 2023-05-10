@@ -119,14 +119,15 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "\"contributor\""
+                          "value": "\"contributor\"",
+                          "mode": 0,
                         }))
                         .unwrap(),
                     ))
@@ -147,14 +148,15 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "\"contributor\""
+                          "value": "\"contributor\"",
+                          "mode": 0,
                         }))
                         .unwrap(),
                     ))
@@ -175,14 +177,15 @@ mod http_router_test {
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
-                    .uri("/api/iam")
+                    .uri("/api/iam/policy")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(
                         serde_json::to_string(&json!({
                           "id": "1",
                           "perm_type": "project",
                           "resource": "222",
-                          "role": "\"contributor\""
+                          "value": "\"contributor\"",
+                          "mode": 0,
                         }))
                         .unwrap(),
                     ))

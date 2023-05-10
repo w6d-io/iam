@@ -7,7 +7,7 @@ use ory_kratos_client::{
     models::{Identity, JsonPatch},
 };
 
-use crate::permission::Input;
+use crate::permission::{Input, Mode};
 
 async fn verify_type_path(
     _client: &Configuration,
@@ -43,9 +43,7 @@ async fn verify_type_path(
         );
         let path = "/metadata_admin".to_owned() + "/" + &payload.perm_type as &str;
         let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
-        let json = serde_json::from_str::<JsonPatch>(&patch)
-            .context(format!("{uuid}:"))
-            .context(format!("{uuid}:"))?;
+        let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
         return Ok(Some(json));
     }
     Ok(None)
@@ -66,18 +64,23 @@ pub async fn kratos_controler(
         };
     }
     info!("{uuid}: Patching identity");
-    let path = "/metadata_admin/".to_owned()
-        + &payload.perm_type as &str
-        + "/"
-        + &payload.resource as &str;
+    let root = match payload.mode() {
+        Mode::Admin => "metadata_admin",
+        Mode::Public => "metadata_public",
+        Mode::Trait => "trait",
+    };
+
+    let path =
+        "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str;
     let raw_patch = format!(
         "{{\"op\" : \"{op}\", \"path\" : \"{path}\", \"value\" : {}}}",
-        payload.role
+        payload.value
     );
 
-    debug!("patch: {raw_patch}");
+    debug!("patch: {}", raw_patch);
     let patch = serde_json::from_str::<JsonPatch>(&raw_patch).context(format!("{uuid}:"))?;
     patch_vec.push(patch);
+    debug!("vec patch: {:?}", patch_vec);
     #[cfg(not(test))]
     patch_identity(_client, &payload.id, Some(patch_vec))
         .await
@@ -98,7 +101,8 @@ mod test_controler {
             id: "1".to_owned(),
             perm_type: "test".to_owned(),
             resource: "resource".to_owned(),
-            role: "\"testting\"".to_owned(),
+            value: "\"testting\"".to_owned(),
+            mode: 0,
         };
         kratos_controler(&client, uuid, payload, "add")
             .await
