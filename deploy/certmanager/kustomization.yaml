@@ -1,0 +1,7 @@
+namespace: ci-system
+
+resources:
+- certificate.yaml
+
+configurations:
+- kustomizeconfig.yaml
