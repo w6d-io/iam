@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - name: Tag and prepare release
         id: tag_and_prepare_release
         uses: K-Phoen/semver-release-action@master
@@ -18,7 +18,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload release notes
         if: steps.tag_and_prepare_release.outputs.tag
-        uses: Roang-zero1/github-create-release-action@master
+        uses: Roang-zero1/github-create-release-action@v3
         with:
           created_tag: ${{ steps.tag_and_prepare_release.outputs.tag }}
         env:
@@ -49,7 +49,7 @@ jobs:
 
       - name: Build and push Docker images
         id: docker_build
-        uses: docker/build-push-action@v2.2.2
+        uses: docker/build-push-action@v4
         with:
           push: true
           build-args: |
