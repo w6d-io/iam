@@ -37,7 +37,7 @@ pub async fn build_rustls_server_config(
             .add(&rustls::Certificate(ca))
             .expect("bad ca cert");
         config_builder
-            .with_client_cert_verifier(server::AllowAnyAuthenticatedClient::new(root_cert_store))
+            .with_client_cert_verifier(server::AllowAnyAuthenticatedClient::new(root_cert_store).boxed())
             .with_single_cert(cert, key)
             .expect("bad certificate/key")
     } else {
