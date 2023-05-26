@@ -66,18 +66,16 @@ checksum = "c59bdb34bc650a32731b31bd8f0829cc15d24a708ee31559e0bb34f2bc320cba"
 
 [[package]]
 name = "attohttpc"
-version = "0.19.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "262c3f7f5d61249d8c00e5546e2685cd15ebeeb1bc0f3cc5449350a1cb07319e"
+checksum = "1fcf00bc6d5abb29b5f97e3c61a90b6d3caa12f3faf897d4a3e3607c050a35a7"
 dependencies = [
  "http",
  "log",
  "native-tls",
- "openssl",
  "serde",
  "serde_json",
  "url",
- "wildmatch",
 ]
 
 [[package]]
@@ -88,15 +86,16 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "aws-creds"
-version = "0.30.0"
+version = "0.34.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aeeee1a5defa63cba39097a510dfe63ef53658fc8995202a610f6a8a4d03639"
+checksum = "3776743bb68d4ad02ba30ba8f64373f1be4e082fe47651767171ce75bb2f6cf5"
 dependencies = [
  "attohttpc",
  "dirs",
+ "log",
+ "quick-xml",
  "rust-ini",
  "serde",
- "serde-xml-rs",
  "thiserror",
  "time",
  "url",
@@ -800,9 +799,11 @@ dependencies = [
  "axum-server",
  "figment",
  "futures",
+ "h2",
  "hyper",
  "mime",
  "nix",
+ "openssl",
  "ory-kratos-client",
  "prost",
  "rs-utils",
@@ -1145,9 +1146,9 @@ dependencies = [
 
 [[package]]
 name = "notify"
-version = "5.2.0"
+version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "729f63e1ca555a43fe3efa4f3efdf4801c479da85b432242a7b726f353c88486"
+checksum = "4d9ba6c734de18ca27c8cef5cd7058aa4ac9f63596131e4c7e41e579319032a2"
 dependencies = [
  "bitflags 1.3.2",
  "crossbeam-channel",
@@ -1463,6 +1464,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f50b1c63b38611e7d4d7f68b82d3ad0cc71a2ad2e7f61fc10f1328d917c93cd"
+dependencies = [
+ "memchr",
+ "serde",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1741,7 +1752,7 @@ dependencies = [
 [[package]]
 name = "rs-utils"
 version = "0.2.2"
-source = "git+https://github.com/w6d-io/rs-utils#7661c82df6c5869e24d6b48ec079c7e850cc017e"
+source = "git+https://github.com/w6d-io/rs-utils#b5b4e8797e501262c98b95dc49a07dc1ac66f3f5"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1769,15 +1780,17 @@ dependencies = [
 
 [[package]]
 name = "rust-s3"
-version = "0.32.3"
+version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6009d9d4cf910505534d62d380a0aa305805a2af0b5c3ad59a3024a0715b847"
+checksum = "1b2ac5ff6acfbe74226fa701b5ef793aaa054055c13ebb7060ad36942956e027"
 dependencies = [
  "async-trait",
  "aws-creds",
  "aws-region",
  "base64 0.13.1",
+ "bytes",
  "cfg-if",
+ "futures",
  "hex",
  "hmac",
  "http",
@@ -1786,9 +1799,9 @@ dependencies = [
  "md5",
  "minidom",
  "percent-encoding",
+ "quick-xml",
  "reqwest",
  "serde",
- "serde-xml-rs",
  "serde_derive",
  "sha2",
  "thiserror",
@@ -1942,18 +1955,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2113ab51b87a539ae008b5c6c02dc020ffa39afd2d83cffcb3f4eb2722cebec2"
 dependencies = [
  "serde_derive",
-]
-
-[[package]]
-name = "serde-xml-rs"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65162e9059be2f6a3421ebbb4fef3e74b7d9e7c60c50a0e292c6239f19f1edfa"
-dependencies = [
- "log",
- "serde",
- "thiserror",
- "xml-rs",
 ]
 
 [[package]]
@@ -2745,12 +2746,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wildmatch"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee583bdc5ff1cf9db20e9db5bb3ff4c3089a8f6b8b31aff265c9aba85812db86"
-
-[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2954,12 +2949,6 @@ checksum = "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d"
 dependencies = [
  "winapi",
 ]
-
-[[package]]
-name = "xml-rs"
-version = "0.8.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d8f380ae16a37b30e6a2cf67040608071384b1450c189e61bea3ff57cde922d"
 
 [[package]]
 name = "yansi"
