@@ -8,7 +8,7 @@ use tracing::{error, info};
 use crate::{
     config::PermissionsConfig,
     http::controler::kratos_controler,
-    permission::{iam_server::Iam, Input, Response},
+    permission::{iam_server::Iam, Input, Reply},
 };
 
 ///structure representin the router, it implements the trait PermissionSrv
@@ -20,7 +20,7 @@ pub struct MyIam {
 #[async_trait]
 impl Iam for MyIam {
     ///grpc route to add an identity field
-    async fn add_permission(&self, req: Request<Input>) -> Result<TonicResponse<Response>, Status> {
+    async fn add_permission(&self, req: Request<Input>) -> Result<TonicResponse<Reply>, Status> {
         let (_, ext, payload) = req.into_parts();
         let uuid = match ext.get::<RequestId>() {
             Some(uuid) => uuid
@@ -44,14 +44,14 @@ impl Iam for MyIam {
             error!("failed to apply patch: {e}");
             return Err(Status::internal(e.to_string()));
         }
-        Ok(TonicResponse::new(Response {}))
+        Ok(TonicResponse::new(Reply {}))
     }
 
     ///grpc route to remove an identity field
     async fn remove_permission(
         &self,
         req: Request<Input>,
-    ) -> Result<TonicResponse<Response>, Status> {
+    ) -> Result<TonicResponse<Reply>, Status> {
         let (_, ext, payload) = req.into_parts();
         let uuid = match ext.get::<RequestId>() {
             Some(uuid) => uuid
@@ -74,14 +74,14 @@ impl Iam for MyIam {
         if let Err(e) = resp {
             return Err(Status::internal(e.to_string()));
         }
-        Ok(TonicResponse::new(Response {}))
+        Ok(TonicResponse::new(Reply {}))
     }
 
     ///grpc route to replace an identity field
     async fn replace_permission(
         &self,
         req: Request<Input>,
-    ) -> Result<TonicResponse<Response>, Status> {
+    ) -> Result<TonicResponse<Reply>, Status> {
         let (_, ext, payload) = req.into_parts();
         let uuid = match ext.get::<RequestId>() {
             Some(uuid) => uuid
@@ -104,6 +104,6 @@ impl Iam for MyIam {
         if let Err(e) = resp {
             return Err(Status::internal(e.to_string()));
         }
-        Ok(TonicResponse::new(Response {}))
+        Ok(TonicResponse::new(Reply {}))
     }
 }

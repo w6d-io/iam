@@ -4,9 +4,9 @@ package permission;
 
 // Service for handling admin (internal) projectmgt action
 service Iam {
-	rpc AddPermission(Input) returns(Response) {}
-	rpc RemovePermission(Input) returns(Response){}
-	rpc ReplacePermission(Input) returns(Response){}
+	rpc AddPermission(Input) returns(Reply) {}
+	rpc RemovePermission(Input) returns(Reply){}
+	rpc ReplacePermission(Input) returns(Reply){}
 }
 
 enum Mode {
@@ -23,5 +23,5 @@ message Input {
 	Mode mode			= 5;
 }
 
-message Response {
+message Reply {
 }
