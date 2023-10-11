@@ -1,5 +1,5 @@
 [kratos]
-addr = "http://kratos-admin.kratos:4434"
+addr = "http://kratos-admin.kratos"
 
 [service]
 addr = "0.0.0.0"
