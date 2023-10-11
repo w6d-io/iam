@@ -23,7 +23,7 @@ spec:
               value: debug
             - name: CONFIG
               value: /data/config/config.toml
-          image: w6dio/iam:0.1.1
+          image: w6dio/iam:latest
           imagePullPolicy: IfNotPresent
           name: iam
           ports:
