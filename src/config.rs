@@ -33,6 +33,7 @@ pub struct Tls {
     pub cert_autority: String,
 }
 
+
 ///structure containing the configuaration of the application
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct PermissionsConfig {
