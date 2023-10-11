@@ -1,6 +1,0 @@
-resources:
-- ca.yaml
-- certificate.yaml
-
-configurations:
-- kustomizeconfig.yaml
