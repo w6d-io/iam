@@ -48,10 +48,7 @@ impl Iam for MyIam {
     }
 
     ///grpc route to remove an identity field
-    async fn remove_permission(
-        &self,
-        req: Request<Input>,
-    ) -> Result<TonicResponse<Reply>, Status> {
+    async fn remove_permission(&self, req: Request<Input>) -> Result<TonicResponse<Reply>, Status> {
         let (_, ext, payload) = req.into_parts();
         let uuid = match ext.get::<RequestId>() {
             Some(uuid) => uuid

@@ -1,4 +1,5 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
+use serde_json::Value;
 use tracing::{debug, info};
 
 #[allow(unused_imports)]
@@ -7,14 +8,24 @@ use ory_kratos_client::{
     models::{Identity, JsonPatch},
 };
 
-
 use crate::permission::{Input, Mode};
+
+fn patch_empty_meta(root: &str,patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()>{
+    let path = "/".to_owned() + root;
+    let patch =
+        format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
+    let json =
+        serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
+    patch_vec.push(json);
+    Ok(())
+}
 
 async fn verify_type_path(
     _client: &Configuration,
     uuid: &str,
     payload: &Input,
-) -> Result<Option<JsonPatch>> {
+) -> Result<Option<Vec<JsonPatch>>> {
+    let mut patch_vec = Vec::new();
     #[cfg(not(test))]
     let identity =
         ory_kratos_client::apis::identity_api::get_identity(_client, &payload.id, None).await?;
@@ -29,11 +40,43 @@ async fn verify_type_path(
         identity.metadata_admin = Some(serde_json::Value::String("test".to_owned()));
         identity
     };
-    debug!("identity: {:#?}", identity);
-    let meta = match identity.metadata_admin {
-        Some(meta) => meta,
-        None => bail!("{uuid}: missing metadata_admin"),
+    let (root, meta) = match payload.mode() {
+        Mode::Admin => {
+            let root = "metadata_admin";
+            let meta = match &identity.metadata_admin {
+                Some(meta) => meta,
+                None => {
+                    patch_empty_meta(root, &mut patch_vec, uuid)?;
+                    &Value::Null
+                }
+            };
+            (root, meta)
+        }
+        Mode::Public => {
+            let root = "metadata_public";
+            let meta = match &identity.metadata_public {
+                Some(meta) => meta,
+                None => {
+                    patch_empty_meta(root, &mut patch_vec, uuid)?;
+                    &Value::Null
+                }
+            };
+            (root, meta)
+        }
+        Mode::Trait => {
+            let root = "traits";
+            let meta = match &identity.traits {
+                Some(meta) => meta,
+                None => {
+                    patch_empty_meta(root, &mut patch_vec, uuid)?;
+                    &Value::Null
+                }
+            };
+            (root, meta)
+        }
     };
+    debug!("identity: {:#?}", identity);
+
     if meta
         .pointer(&("/".to_owned() + &payload.perm_type as &str))
         .is_none()
@@ -42,10 +85,11 @@ async fn verify_type_path(
             "{uuid}: {} do not exit, adding it to metadata",
             payload.perm_type
         );
-        let path = "/metadata_admin".to_owned() + "/" + &payload.perm_type as &str;
+        let path = "/".to_owned() + root + "/" + &payload.perm_type as &str;
         let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
         let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
-        return Ok(Some(json));
+        patch_vec.push(json);
+        return Ok(Some(patch_vec));
     }
     Ok(None)
 }
@@ -60,8 +104,8 @@ pub async fn kratos_controler(
 ) -> Result<()> {
     let mut patch_vec = Vec::new();
     if op != "remove" {
-        if let Some(json_patch) = verify_type_path(_client, uuid, &payload).await? {
-            patch_vec.push(json_patch);
+        if let Some(mut json_patch) = verify_type_path(_client, uuid, &payload).await? {
+            patch_vec.append(&mut json_patch);
         };
     }
     info!("{uuid}: Patching identity");
