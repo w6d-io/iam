@@ -8,7 +8,7 @@ main if {
   some i
 
   # set the role  if the ressource id is present in the role attribute of the user
-  roles = data.metadata_admin[_]
+  roles = data.metadata_public[_]
   roles[i].key == input.resource
   role := roles[i].value
   matchUrl with input as {
