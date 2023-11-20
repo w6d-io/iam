@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use serde_json::Value;
+use serde_json::{Value, json};
 use tracing::{debug, info};
 
 #[allow(unused_imports)]
@@ -114,16 +114,25 @@ pub async fn kratos_controler(
         Mode::Public => "metadata_public",
         Mode::Trait => "trait",
     };
+    let mut value = serde_json::from_str::<Value>(&payload.value)?;
+    let path = match value {
+        Value::Null => {
+            value = Value::String(payload.resource);
+            "/".to_owned() + root + "/" + &payload.perm_type as &str
+        },
+        _ => {
+            "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str
 
-    let path =
-        "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str;
-    let raw_patch = format!(
-        "{{\"op\" : \"{op}\", \"path\" : \"{path}\", \"value\" : {}}}",
-        payload.value
+        }
+    };
+    let raw_patch = json!({
+        "op": op,
+        "path": path,
+        "value": value}
     );
 
     debug!("patch: {}", raw_patch);
-    let patch = serde_json::from_str::<JsonPatch>(&raw_patch).context(format!("{uuid}:"))?;
+    let patch = serde_json::from_value::<JsonPatch>(raw_patch).context(format!("{uuid}:"))?;
     patch_vec.push(patch);
     debug!("vec patch: {:?}", patch_vec);
     #[cfg(not(test))]
