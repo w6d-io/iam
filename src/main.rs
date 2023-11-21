@@ -103,7 +103,7 @@ async fn make_http(
     f: fn(ConfigState) -> Router,
     addr: String,
 ) -> Result<JoinHandle<Result<(), hyper::Error>>> {
-    //todo: add path for tlscertificate
+    //todo: add path for tls certificate
     let handle = tokio::spawn(
         Server::bind(&addr.parse().unwrap())
             .serve(f(shared_state).into_make_service())
