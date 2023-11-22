@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use tracing::{debug, info};
 
 #[allow(unused_imports)]
@@ -10,12 +10,14 @@ use ory_kratos_client::{
 
 use crate::permission::{Input, Mode};
 
-fn patch_empty_meta(root: &str,patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()>{
+fn patch_empty_meta(root: &str, patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()> {
     let path = "/".to_owned() + root;
-    let patch =
-        format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
-    let json =
-        serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
+    let patch = json!({
+        "op": "add",
+        "path": path,
+        "value" : {}
+    });
+    let json = serde_json::from_value::<JsonPatch>(patch).context(format!("{uuid}:"))?;
     patch_vec.push(json);
     Ok(())
 }
@@ -76,18 +78,20 @@ async fn verify_type_path(
         }
     };
     debug!("identity: {:#?}", identity);
-
-    if meta
-        .pointer(&("/".to_owned() + &payload.perm_type as &str))
-        .is_none()
-    {
+    let pointer = meta.pointer(&("/".to_owned() + &payload.perm_type as &str));
+    if pointer.is_none() {
         info!(
             "{uuid}: {} do not exit, adding it to metadata",
             payload.perm_type
         );
         let path = "/".to_owned() + root + "/" + &payload.perm_type as &str;
-        let patch = format!("{{\"op\" : \"add\", \"path\" : \"{path}\", \"value\" : {{}} }}");
-        let json = serde_json::from_str::<JsonPatch>(&patch).context(format!("{uuid}:"))?;
+        let value = serde_json::from_str::<Value>(&payload.value)?;
+        let patch = if value.is_null() || payload.resource == "-" {
+            json!({"op" : "add", "path" : path, "value" : [] })
+        } else {
+            json!({"op" : "add", "path" : path, "value" : {} })
+        };
+        let json = serde_json::from_value::<JsonPatch>(patch).context(format!("{uuid}:"))?;
         patch_vec.push(json);
         return Ok(Some(patch_vec));
     }
@@ -118,11 +122,15 @@ pub async fn kratos_controler(
     let path = match value {
         Value::Null => {
             value = Value::String(payload.resource);
-            "/".to_owned() + root + "/" + &payload.perm_type as &str
-        },
+            "/".to_owned() + root + "/" + &payload.perm_type as &str + "/-"
+        }
         _ => {
-            "/".to_owned() + root + "/" + &payload.perm_type as &str + "/" + &payload.resource as &str
-
+            "/".to_owned()
+                + root
+                + "/"
+                + &payload.perm_type as &str
+                + "/"
+                + &payload.resource as &str
         }
     };
     let raw_patch = json!({
