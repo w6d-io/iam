@@ -17,4 +17,4 @@ configMapGenerator:
 images:
 - name: w6dio/iam
   newName: w6dio/iam
-  newTag: v0.1.13
+  newTag: v0.1.14
