@@ -27,7 +27,7 @@ thiserror = "1.0.40"
 axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 rustls-pemfile = "1.0.2"
 tokio-rustls = "0.24"
-h2 = "0.3.19"
+h2 = "0.3.26"
 openssl = "0.10.60"
 
 [dev-dependencies]
