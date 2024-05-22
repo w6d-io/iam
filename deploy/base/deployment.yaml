@@ -36,8 +36,6 @@ spec:
           volumeMounts:
             - mountPath: /data/config
               name: config
-      nodeSelector:
-        role: appli
       serviceAccountName: iam
       tolerations:
         - effect: NoSchedule
