@@ -10,7 +10,8 @@ use ory_kratos_client::{
 
 use crate::permission::{Input, Mode};
 
-fn patch_empty_meta(root: &str, patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()> {
+///This function create an empty map exist at asked path.
+fn patch_empty_meta(root: &str,patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()>{
     let path = "/".to_owned() + root;
     let patch = json!({
         "op": "add",
@@ -22,6 +23,8 @@ fn patch_empty_meta(root: &str, patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> R
     Ok(())
 }
 
+///This function make sure that an empty map of the type being patch exist if not it add an empty
+///one.
 async fn verify_type_path(
     _client: &Configuration,
     uuid: &str,
@@ -98,8 +101,8 @@ async fn verify_type_path(
     Ok(None)
 }
 
-///make re request to change the identity coresponding to the user id
-///with the given data and instruction,
+///Make request to change the identity coresponding to the user id (uuid)
+///with the given data (payload) and instruction (op).
 pub async fn kratos_controler(
     _client: &Configuration,
     uuid: &str,

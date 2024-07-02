@@ -20,8 +20,8 @@ pub mod permission {
 use permission::iam_server::IamServer;
 mod mtls;
 use mtls::build_rustls_server_config;
-mod handelers;
-use handelers::{fallback, shutdown_signal};
+mod handler;
+use handler::{fallback, shutdown_signal};
 mod grpc;
 use grpc::router::MyIam;
 mod http;

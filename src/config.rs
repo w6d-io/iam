@@ -12,6 +12,7 @@ use rs_utils::config::{Config, Kratos};
 
 pub const CONFIG_FALLBACK: &str = "test/config.toml";
 
+///Represntation of the ports utilized by the web service.
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct Ports {
     pub http: String,
@@ -20,12 +21,14 @@ pub struct Ports {
     pub grpc_health: String,
 }
 
+///Represntation of the app eb service config
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct Service {
     pub addr: String,
     pub ports: Ports,
 }
 
+///Represntation of the tls config.
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct Tls {
     pub certificate: String,
@@ -33,7 +36,8 @@ pub struct Tls {
     pub cert_autority: String,
 }
 
-///structure containing the configuaration of the application
+
+///Representation of this app config.
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct PermissionsConfig {
     // pub prefix: String,
