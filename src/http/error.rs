@@ -33,15 +33,15 @@ impl IntoResponse for RouterError {
                 error!("{:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("INTERNAL_SERVER_ERROR: {}", e),
+                    format!("INTERNAL_SERVER_ERROR: {e}"),
                 )
             }
             .into_response(),
             RouterError::Kratos(e) => {
-                error!("Kratos is not ready: {:?}", e);
+                error!("Kratos is not ready: {e:?}");
                 (
                     StatusCode::SERVICE_UNAVAILABLE,
-                    format!("Kratos is not ready: {:?}", e),
+                    format!("Kratos is not ready: {e:?}"),
                 )
             }
             .into_response(),

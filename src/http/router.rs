@@ -12,14 +12,14 @@ use tower_http::request_id::RequestId;
 use tracing::info;
 
 use crate::{
-    config::PermissionsConfig,
-    http::{controler::kratos_controler, error::RouterError},
+    config::IamConfig,
+    http::{controler::kratos, error::RouterError},
     permission::Input,
 };
 
 ///http route to add an identity field
 pub async fn add(
-    State(config): State<Arc<RwLock<PermissionsConfig>>>,
+    State(config): State<Arc<RwLock<IamConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
 ) -> Result<&'static str, RouterError> {
@@ -31,14 +31,14 @@ pub async fn add(
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
-    kratos_controler(client, uuid, payload, "add").await?;
+    kratos(client, uuid, payload, "add").await?;
     info!("{uuid}: done");
     Ok("200")
 }
 
 ///http route to remove an identity field
 pub async fn remove(
-    State(config): State<Arc<RwLock<PermissionsConfig>>>,
+    State(config): State<Arc<RwLock<IamConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
 ) -> Result<&'static str, RouterError> {
@@ -49,14 +49,14 @@ pub async fn remove(
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
-    kratos_controler(client, uuid, payload, "remove").await?;
+    kratos(client, uuid, payload, "remove").await?;
     info!("{uuid}: done");
     Ok("200")
 }
 
 ///http route to replace an identity field
 pub async fn replace(
-    State(config): State<Arc<RwLock<PermissionsConfig>>>,
+    State(config): State<Arc<RwLock<IamConfig>>>,
     request_id: Extension<RequestId>,
     Json(payload): Json<Input>,
 ) -> Result<&'static str, RouterError> {
@@ -67,7 +67,7 @@ pub async fn replace(
         Some(client) => client,
         None => Err(anyhow!("{uuid}: Kratos client not initialized"))?,
     };
-    kratos_controler(client, uuid, payload, "replace").await?;
+    kratos(client, uuid, payload, "replace").await?;
 
     info!("{uuid}: done");
     Ok("200")
@@ -78,7 +78,7 @@ pub async fn alive() -> Result<&'static str, RouterError> {
 }
 
 pub async fn ready(
-    State(config): State<Arc<RwLock<PermissionsConfig>>>,
+    State(config): State<Arc<RwLock<IamConfig>>>,
 ) -> Result<&'static str, RouterError> {
     let config = config.read().await;
     let client = match &config.kratos.client {
@@ -95,7 +95,7 @@ mod http_router_test {
 
     use crate::{
         app,
-        config::{PermissionsConfig, CONFIG_FALLBACK},
+        config::{IamConfig, CONFIG_FALLBACK},
     };
     use axum::{
         body::Body,
@@ -106,8 +106,8 @@ mod http_router_test {
     use tokio::sync::RwLock;
     use tower::ServiceExt;
 
-    async fn create_config() -> Arc<RwLock<PermissionsConfig>> {
-        Arc::new(RwLock::new(PermissionsConfig::new(CONFIG_FALLBACK).await))
+    async fn create_config() -> Arc<RwLock<IamConfig>> {
+        Arc::new(RwLock::new(IamConfig::new(CONFIG_FALLBACK).await))
     }
 
     #[tokio::test]
