@@ -18,11 +18,12 @@ pub async fn build_rustls_server_config(
     let cert = rustls_pemfile::certs(&mut cert.as_ref())?;
     let cert = cert.into_iter().map(rustls::Certificate).collect();
 
-    let key = match rustls_pemfile::read_one(&mut key.as_ref())? {
-        Some(Item::RSAKey(key)) | Some(Item::PKCS8Key(key)) => key,
-        // rustls only support PKCS8, does not support ECC private key
-        _ => panic!("private key invalid or not supported"),
+    let Some(Item::RSAKey(key) | Item::PKCS8Key(key)) =
+        rustls_pemfile::read_one(&mut key.as_ref())?
+    else {
+        panic!("private key invalid or not supported")
     };
+
     let key = rustls::PrivateKey(key);
 
     let config_builder = ServerConfig::builder().with_safe_defaults();

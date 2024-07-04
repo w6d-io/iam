@@ -36,10 +36,9 @@ pub struct Tls {
     pub cert_autority: String,
 }
 
-
 ///Representation of this app config.
 #[derive(Deserialize, Clone, Default, Debug)]
-pub struct PermissionsConfig {
+pub struct IamConfig {
     // pub prefix: String,
     pub service: Service,
     pub kratos: Kratos,
@@ -48,7 +47,7 @@ pub struct PermissionsConfig {
 }
 
 #[async_trait]
-impl Config for PermissionsConfig {
+impl Config for IamConfig {
     fn set_path<T: AsRef<Path>>(&mut self, path: T) -> &mut Self {
         self.path = Some(path.as_ref().to_path_buf());
         self
@@ -64,7 +63,7 @@ impl Config for PermissionsConfig {
             Err(e) => bail!(e),
             _ => (),
         }
-        let mut config: PermissionsConfig = Figment::new().merge(Toml::file(path)).extract()?;
+        let mut config: IamConfig = Figment::new().merge(Toml::file(path)).extract()?;
         config.kratos.update();
         config.set_path(path);
         *self = config;
