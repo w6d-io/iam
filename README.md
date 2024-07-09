@@ -20,6 +20,7 @@ To replace data in an identity send a PUT request with the uuid in the x-request
 header to: ``/api/iam/policy``
 
 In all the preceding case you must use the payload json:
+```json
 {
     "id" = "string"
     "perm_type" = "string"
@@ -27,7 +28,7 @@ In all the preceding case you must use the payload json:
     "value" = "string"
     "mode" = integer
 }
-
+```
 The id field represent the id of the identity to modify.
 
 The perm_type field represent the type of permission to modify in wildcard case:
