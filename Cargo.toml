@@ -20,8 +20,8 @@ tracing = { version = "0.1.37", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 hyper = "1.4.0"
 ory-kratos-client = "1.0.0"
-tonic = "0.11.*"
-prost = "0.12.1"
+tonic = "0.12.*"
+prost = "0.13.1"
 thiserror = "1.0.40"
 axum-server = { version = "0.6.*", features = ["tls-rustls"] }
 rustls-pemfile = "1.0.4"
@@ -35,4 +35,4 @@ mime = "0.3"
 nix = "0.29.0"
 
 [build-dependencies]
-tonic-build = "0.11.*"
+tonic-build = "0.12.*"

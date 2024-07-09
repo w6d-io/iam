@@ -43,7 +43,7 @@ fn make_grpc(
     let socket = addr.parse().unwrap();
     tokio::spawn(
         GrpcServer::builder()
-            // .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+            .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
             .add_service(service)
             .serve_with_shutdown(socket, shutdown_signal()),
     )
