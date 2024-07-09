@@ -47,7 +47,7 @@ The mode field represent the type of data to edit:
 
 ### grpc
 
-the  grpc part use the same routes as the http one but use a different port (see
-config file)
+the grpc part use the same model as the http but but use a different port (see
+config file) 
 
-For the payload format please refer to the .proto files in the /proto directory.
+For the method and payload format please refer to the .proto files in the /proto directory.
