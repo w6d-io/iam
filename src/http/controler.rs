@@ -10,6 +10,7 @@ use ory_kratos_client::{
 
 use crate::permission::{Input, Mode};
 
+///This function create an empty map exist at asked path.
 fn patch_empty_meta(root: &str, patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> Result<()> {
     let path = "/".to_owned() + root;
     let patch = json!({
@@ -22,6 +23,8 @@ fn patch_empty_meta(root: &str, patch_vec: &mut Vec<JsonPatch>, uuid: &str) -> R
     Ok(())
 }
 
+///This function make sure that an empty map of the type being patch exist if not it add an empty
+///one.
 async fn verify_type_path(
     _client: &Configuration,
     uuid: &str,
@@ -98,14 +101,9 @@ async fn verify_type_path(
     Ok(None)
 }
 
-///make re request to change the identity coresponding to the user id
-///with the given data and instruction,
-pub async fn kratos_controler(
-    _client: &Configuration,
-    uuid: &str,
-    payload: Input,
-    op: &str,
-) -> Result<()> {
+///Make request to change the identity coresponding to the user id (uuid)
+///with the given data (payload) and instruction (op).
+pub async fn kratos(_client: &Configuration, uuid: &str, payload: Input, op: &str) -> Result<()> {
     let mut patch_vec = Vec::new();
     if op != "remove" {
         if let Some(mut json_patch) = verify_type_path(_client, uuid, &payload).await? {
@@ -166,8 +164,6 @@ mod test_controler {
             value: "\"testting\"".to_owned(),
             mode: 0,
         };
-        kratos_controler(&client, uuid, payload, "add")
-            .await
-            .unwrap();
+        kratos(&client, uuid, payload, "add").await.unwrap();
     }
 }

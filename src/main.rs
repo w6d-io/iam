@@ -1,12 +1,12 @@
-use std::{sync::Arc, time::Duration};
+use std::{future::IntoFuture, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use axum::{
     routing::{get, post},
-    Router, Server,
+    serve, Router,
 };
 use axum_server::{bind_rustls, tls_rustls::RustlsConfig, Handle};
-use tokio::{sync::RwLock, task::JoinHandle};
+use tokio::{net::TcpListener, sync::RwLock, task::JoinHandle};
 use tonic::transport::Server as GrpcServer;
 use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
 use tracing::{info, warn};
@@ -20,38 +20,37 @@ pub mod permission {
 use permission::iam_server::IamServer;
 mod mtls;
 use mtls::build_rustls_server_config;
-mod handelers;
-use handelers::{fallback, shutdown_signal};
+mod handler;
+use handler::{fallback, shutdown_signal};
 mod grpc;
 use grpc::router::MyIam;
 mod http;
 use http::router::{add, alive, ready, remove, replace};
 mod config;
-use config::{PermissionsConfig, Tls, CONFIG_FALLBACK};
+use config::{IamConfig, Tls, CONFIG_FALLBACK};
 
-type ConfigState = Arc<RwLock<PermissionsConfig>>;
+type ConfigState = Arc<RwLock<IamConfig>>;
 
 ///lauch the grpc router
-async fn make_grpc(
+fn make_grpc(
     shared_state: ConfigState,
-    addr: String,
-) -> Result<JoinHandle<Result<(), tonic::transport::Error>>> {
+    addr: &str,
+) -> JoinHandle<Result<(), tonic::transport::Error>> {
     let service = IamServer::new(MyIam {
         config: shared_state,
     });
     info!("lauching grpc server on: {addr}");
-    let socket = addr.parse()?;
-    let handle = tokio::spawn(
+    let socket = addr.parse().unwrap();
+    tokio::spawn(
         GrpcServer::builder()
             .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
             .add_service(service)
             .serve_with_shutdown(socket, shutdown_signal()),
-    );
-    Ok(handle)
+    )
 }
 
 ///main router config
-pub fn app(shared_state: ConfigState) -> Router {
+fn app(shared_state: ConfigState) -> Router {
     info!("configuring main router");
     Router::new()
         .route("/api/iam/policy", post(add).delete(remove).put(replace))
@@ -73,7 +72,7 @@ pub fn health(shared_state: ConfigState) -> Router {
 ///this function send the shutdown signal to the router
 async fn shutdown(handle: axum_server::Handle) {
     shutdown_signal().await;
-    handle.graceful_shutdown(Some(Duration::from_secs(30)))
+    handle.graceful_shutdown(Some(Duration::from_secs(30)));
 }
 
 ///launch http router with mtls
@@ -88,8 +87,9 @@ async fn make_http_mtls(
     let tls_config =
         build_rustls_server_config(&tls.certificate, &tls.key, &tls.cert_autority).await?;
     let rustls_config = RustlsConfig::from_config(tls_config);
+    let addr = addr.parse().unwrap();
     let handle = tokio::spawn(
-        bind_rustls(addr.parse().unwrap(), rustls_config)
+        bind_rustls(addr, rustls_config)
             .handle(handle.to_owned())
             .serve(f(shared_state).into_make_service()),
     );
@@ -102,15 +102,14 @@ async fn make_http(
     shared_state: ConfigState,
     f: fn(ConfigState) -> Router,
     addr: String,
-) -> Result<JoinHandle<Result<(), hyper::Error>>> {
+) -> JoinHandle<Result<(), std::io::Error>> {
     //todo: add path for tls certificate
-    let handle = tokio::spawn(
-        Server::bind(&addr.parse().unwrap())
-            .serve(f(shared_state).into_make_service())
-            .with_graceful_shutdown(shutdown_signal()),
-    );
+    let listener = TcpListener::bind(&addr).await.unwrap();
+    let service = serve(listener, f(shared_state))
+        .with_graceful_shutdown(shutdown_signal())
+        .into_future();
     info!("lauching http server on: {addr}");
-    Ok(handle)
+    tokio::spawn(service)
 }
 
 #[tokio::main]
@@ -124,7 +123,7 @@ async fn main() -> Result<()> {
         warn!("Config variable not found switching to fallback");
         CONFIG_FALLBACK.to_owned()
     });
-    let config = PermissionsConfig::new(&config_path).await;
+    let config = IamConfig::new(&config_path).await;
     let service = config.service.clone();
     let tls = config.tls.clone();
     let shared_state = Arc::new(RwLock::new(config));
@@ -138,11 +137,11 @@ async fn main() -> Result<()> {
     let http = make_http_mtls(shared_state.clone(), app, http_addr, &handle, &tls).await?;
 
     let health_addr = service.addr.clone() + ":" + &service.ports.http_health as &str;
-    let health = make_http(shared_state.clone(), health, health_addr).await?;
+    let health = make_http(shared_state.clone(), health, health_addr).await;
 
     info!("statrting grpc router");
     let grpc_addr = service.addr.clone() + ":" + &service.ports.grpc as &str;
-    let grpc = make_grpc(shared_state, grpc_addr).await?;
+    let grpc = make_grpc(shared_state, &grpc_addr);
     let (grpc_critical, http_critical, health_critical) = tokio::try_join!(grpc, http, health)?;
     grpc_critical?;
     http_critical?;
