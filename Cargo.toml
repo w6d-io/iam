@@ -27,7 +27,7 @@ axum-server = { version = "0.6.*", features = ["tls-rustls"] }
 rustls-pemfile = "1.0.4"
 tokio-rustls = "0.24"
 h2 = "0.4.5"
-openssl = "0.10.60"
+openssl = "0.10.66"
 stream-cancel = "0.8.2"
 
 [dev-dependencies]
